@@ -1,5 +1,6 @@
 package hms.service.impl;
 
+import hms.exception.ResourceNotFoundException;
 import hms.model.Department;
 import hms.repository.DepartmentRepository;
 import hms.service.DepartmentService;
@@ -21,35 +22,55 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public Optional<Department> getDepartmentById(Long id) {
-        return departmentRepository.findById(id);
+    public Department getDepartmentById(Long id) {
+        return departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
     }
 
     @Override
     public Department createDepartment(Department department) {
+        // Check if department with same name already exists (case-insensitive)
+        if (department.getName() != null && departmentRepository.findByNameIgnoreCase(department.getName()).isPresent()) {
+            throw new RuntimeException("Department with name '" + department.getName() + "' already exists");
+        }
         return departmentRepository.save(department);
     }
 
     @Override
     public Department updateDepartment(Long id, Department department) {
-        Optional<Department> existingDepartment = departmentRepository.findById(id);
-        if (existingDepartment.isPresent()) {
-            Department updatedDepartment = existingDepartment.get();
-            updatedDepartment.setName(department.getName());
-            updatedDepartment.setDescription(department.getDescription());
-            updatedDepartment.setLocation(department.getLocation());
-            return departmentRepository.save(updatedDepartment);
-        } else {
-            throw new RuntimeException("Department not found with id: " + id);
+        Department existingDepartment = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
+
+        // Check if another department with the same name already exists (case-insensitive)
+        if (department.getName() != null) {
+            departmentRepository.findByNameIgnoreCase(department.getName()).ifPresent(existingDepartmentWithName -> {
+                if (!existingDepartmentWithName.getId().equals(id)) {
+                    throw new RuntimeException("Department with name '" + department.getName() + "' already exists");
+                }
+            });
         }
+
+        existingDepartment.setName(department.getName());
+        existingDepartment.setDescription(department.getDescription());
+        existingDepartment.setLocation(department.getLocation());
+        return departmentRepository.save(existingDepartment);
     }
 
     @Override
     public void deleteDepartment(Long id) {
-        if (departmentRepository.existsById(id)) {
-            departmentRepository.deleteById(id);
-        } else {
-            throw new RuntimeException("Department not found with id: " + id);
+        if (!departmentRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Department", "id", id);
         }
+        departmentRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Department> getDepartmentsByNameContaining(String name) {
+        return departmentRepository.findByNameContainingIgnoreCase(name);
+    }
+
+    @Override
+    public List<Department> getDepartmentsByLocation(String location) {
+        return departmentRepository.findByLocation(location);
     }
 }

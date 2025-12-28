@@ -2,12 +2,15 @@ package hms.service;
 
 import hms.model.Department;
 import java.util.List;
-import java.util.Optional;
 
 public interface DepartmentService {
     List<Department> getAllDepartments();
-    Optional<Department> getDepartmentById(Long id);
+    Department getDepartmentById(Long id);
     Department createDepartment(Department department);
     Department updateDepartment(Long id, Department department);
     void deleteDepartment(Long id);
+
+    // Additional methods for searching
+    List<Department> getDepartmentsByNameContaining(String name);
+    List<Department> getDepartmentsByLocation(String location);
 }

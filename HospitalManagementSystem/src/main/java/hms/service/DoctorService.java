@@ -1,13 +1,19 @@
 package hms.service;
 
+import hms.model.Department;
 import hms.model.Doctor;
 import java.util.List;
-import java.util.Optional;
 
 public interface DoctorService {
     List<Doctor> getAllDoctors();
-    Optional<Doctor> getDoctorById(Long id);
+    Doctor getDoctorById(Long id);
     Doctor createDoctor(Doctor doctor);
     Doctor updateDoctor(Long id, Doctor doctor);
     void deleteDoctor(Long id);
+
+    // Additional methods for searching
+    List<Doctor> getDoctorsBySpecialization(String specialization);
+    List<Doctor> getDoctorsBySpecializationContaining(String specialization);
+    List<Doctor> getDoctorsByNameContaining(String name);
+    List<Doctor> getDoctorsByDepartment(Department department);
 }
