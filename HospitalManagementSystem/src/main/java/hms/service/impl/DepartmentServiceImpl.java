@@ -30,7 +30,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public Department createDepartment(Department department) {
         // Check if department with same name already exists (case-insensitive)
-        if (department.getName() != null && departmentRepository.findByNameIgnoreCase(department.getName()).isPresent()) {
+        if (department.getName() != null && departmentRepository.existsByNameIgnoreCase(department.getName())) {
             throw new RuntimeException("Department with name '" + department.getName() + "' already exists");
         }
         return departmentRepository.save(department);
@@ -43,11 +43,10 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         // Check if another department with the same name already exists (case-insensitive)
         if (department.getName() != null) {
-            departmentRepository.findByNameIgnoreCase(department.getName()).ifPresent(existingDepartmentWithName -> {
-                if (!existingDepartmentWithName.getId().equals(id)) {
-                    throw new RuntimeException("Department with name '" + department.getName() + "' already exists");
-                }
-            });
+            Optional<Department> existingDepartmentWithName = departmentRepository.findByNameIgnoreCase(department.getName());
+            if (existingDepartmentWithName.isPresent() && !existingDepartmentWithName.get().getId().equals(id)) {
+                throw new RuntimeException("Department with name '" + department.getName() + "' already exists");
+            }
         }
 
         existingDepartment.setName(department.getName());
